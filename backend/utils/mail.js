@@ -4,9 +4,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 /*
-ENV REQUIRED (Render + .env):
-EMAIL_USER=yourgmail@gmail.com
-EMAIL_PASS=16digitapppassword
+ENV REQUIRED (.env + Render):
+
+EMAIL=yourgmail@gmail.com
+PASS=16digitapppassword
 */
 
 // 🔥 Gmail transporter
