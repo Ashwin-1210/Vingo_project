@@ -3,47 +3,66 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/*
+ENV REQUIRED (Render + .env):
+EMAIL_USER=yourgmail@gmail.com
+EMAIL_PASS=16digitapppassword
+*/
+
+// 🔥 Gmail transporter
 const transporter = nodemailer.createTransport({
-  service: "Gmail",
+  service: "gmail",
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-export const sendOtpMail = async (to, otp) => {
-  const info = await transporter.sendMail({
-    from: process.env.EMAIL,
-    to: to,
-    subject: "Reset Your Password",
-    html: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-  });
+// ================= OTP MAIL =================
+export const sendOtpMail = async (email, otp) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `"Vingo Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your OTP Code - Vingo",
+      html: `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>Vingo OTP Verification</h2>
+          <p>Your OTP is:</p>
+          <h1 style="color:#ff4d2d;">${otp}</h1>
+          <p>This OTP will expire in <b>5 minutes</b>.</p>
+          <p>If you did not request this, please ignore.</p>
+        </div>
+      `,
+    });
 
-  console.log("MAIL SENT:", info.response); // ⭐ important
+    console.log("✅ OTP MAIL SENT:", info.response);
+  } catch (error) {
+    console.error("❌ OTP MAIL ERROR:", error.message);
+  }
 };
 
-// export const sendOtpMail = async (email, otp) => {
-//   console.log("=================================");
-//   console.log("📩 OTP GENERATED FOR:", email);
-//   console.log("🔑 OTP:", otp);
-//   console.log("=================================");
-// };
-
-// export const sendDeliveryOtpMail = async (user, otp) => {
-//   const info = await transporter.sendMail({
-//     from: process.env.EMAIL,
-//     to: user.email,
-//     subject: "Delivery OTP",
-//     html: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-//   });
-
-//   console.log("DELIVERY MAIL SENT:", info.response);
-// };
+// ================= DELIVERY OTP MAIL =================
 export const sendDeliveryOtpMail = async (user, otp) => {
-  console.log("=================================");
-  console.log("🚚 DELIVERY OTP FOR:", user?.email);
-  console.log("🔑 OTP:", otp);
-  console.log("=================================");
+  try {
+    const info = await transporter.sendMail({
+      from: `"Vingo Delivery" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Delivery OTP - Vingo",
+      html: `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>Delivery Verification</h2>
+          <p>Your delivery OTP is:</p>
+          <h1 style="color:#ff4d2d;">${otp}</h1>
+          <p>Please share this OTP with the delivery partner.</p>
+        </div>
+      `,
+    });
+
+    console.log("✅ DELIVERY OTP MAIL SENT:", info.response);
+  } catch (error) {
+    console.error("❌ DELIVERY OTP MAIL ERROR:", error.message);
+  }
 };
