@@ -1,56 +1,67 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { io } from "socket.io-client";
+
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
-import useGetCurrentUser from "./hooks/useGetCurrentUser";
-import { useDispatch, useSelector } from "react-redux";
 import Home from "./pages/Home";
-import useGetCity from "./hooks/useGetCity";
-import useGetMyshop from "./hooks/useGetMyShop";
 import CreateEditShop from "./pages/CreateEditShop";
 import AddItem from "./pages/AddItem";
 import EditItem from "./pages/EditItem";
-import useGetShopByCity from "./hooks/useGetShopByCity";
-import useGetItemsByCity from "./hooks/useGetItemsByCity";
 import CartPage from "./pages/CartPage";
 import CheckOut from "./pages/CheckOut";
 import OrderPlaced from "./pages/OrderPlaced";
 import MyOrders from "./pages/MyOrders";
-import useGetMyOrders from "./hooks/useGetMyOrders";
-import useUpdateLocation from "./hooks/useUpdateLocation";
 import TrackOrderPage from "./pages/TrackOrderPage";
 import Shop from "./pages/Shop";
-import { useEffect } from "react";
-import { io } from "socket.io-client";
-import { setSocket } from "./redux/userSlice";
+
+import useGetCurrentUser from "./hooks/useGetCurrentUser";
+import useGetCity from "./hooks/useGetCity";
+import useGetMyshop from "./hooks/useGetMyShop";
+import useGetShopByCity from "./hooks/useGetShopByCity";
+import useGetItemsByCity from "./hooks/useGetItemsByCity";
+import useGetMyOrders from "./hooks/useGetMyOrders";
+import useUpdateLocation from "./hooks/useUpdateLocation";
+
+import { setSocket, setUserData } from "./redux/userSlice";
 
 export const serverUrl = import.meta.env.VITE_API_URL;
 
 function App() {
-  const { userData } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const { userData, socket } = useSelector((state) => state.user);
+
+  // 🔥 NEW → refresh ke baad user restore
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser && !userData) {
+      dispatch(setUserData(JSON.parse(savedUser)));
+    }
+  }, [dispatch, userData]);
+
+  // 🔹 hooks only when user logged in (IMPORTANT FIX)
   useGetCurrentUser();
   useUpdateLocation();
   useGetCity();
-  useGetMyshop();
-  useGetShopByCity();
-  useGetItemsByCity();
-  useGetMyOrders();
 
-  // 🔹 socket sirf ek baar create hoga
+  if (userData) {
+    useGetMyshop();
+    useGetShopByCity();
+    useGetItemsByCity();
+    useGetMyOrders();
+  }
+
+  // 🔹 socket create once
   useEffect(() => {
     const socketInstance = io(serverUrl, { withCredentials: true });
     dispatch(setSocket(socketInstance));
 
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, []);
+    return () => socketInstance.disconnect();
+  }, [dispatch]);
 
-  // 🔹 jab userData aaye tab identity emit
-  const { socket } = useSelector((state) => state.user);
-
+  // 🔹 send identity when user available
   useEffect(() => {
     if (socket && userData?._id) {
       socket.emit("identity", { userId: userData._id });
@@ -61,55 +72,56 @@ function App() {
     <Routes>
       <Route
         path="/signup"
-        element={!userData ? <SignUp /> : <Navigate to={"/"} />}
+        element={!userData ? <SignUp /> : <Navigate to="/" />}
       />
       <Route
         path="/signin"
-        element={!userData ? <SignIn /> : <Navigate to={"/"} />}
+        element={!userData ? <SignIn /> : <Navigate to="/" />}
       />
       <Route
         path="/forgot-password"
-        element={!userData ? <ForgotPassword /> : <Navigate to={"/"} />}
+        element={!userData ? <ForgotPassword /> : <Navigate to="/" />}
       />
+
       <Route
         path="/"
-        element={userData ? <Home /> : <Navigate to={"/signin"} />}
+        element={userData ? <Home /> : <Navigate to="/signin" />}
       />
       <Route
         path="/create-edit-shop"
-        element={userData ? <CreateEditShop /> : <Navigate to={"/signin"} />}
+        element={userData ? <CreateEditShop /> : <Navigate to="/signin" />}
       />
       <Route
         path="/add-item"
-        element={userData ? <AddItem /> : <Navigate to={"/signin"} />}
+        element={userData ? <AddItem /> : <Navigate to="/signin" />}
       />
       <Route
         path="/edit-item/:itemId"
-        element={userData ? <EditItem /> : <Navigate to={"/signin"} />}
+        element={userData ? <EditItem /> : <Navigate to="/signin" />}
       />
       <Route
         path="/cart"
-        element={userData ? <CartPage /> : <Navigate to={"/signin"} />}
+        element={userData ? <CartPage /> : <Navigate to="/signin" />}
       />
       <Route
         path="/checkout"
-        element={userData ? <CheckOut /> : <Navigate to={"/signin"} />}
+        element={userData ? <CheckOut /> : <Navigate to="/signin" />}
       />
       <Route
         path="/order-placed"
-        element={userData ? <OrderPlaced /> : <Navigate to={"/signin"} />}
+        element={userData ? <OrderPlaced /> : <Navigate to="/signin" />}
       />
       <Route
         path="/my-orders"
-        element={userData ? <MyOrders /> : <Navigate to={"/signin"} />}
+        element={userData ? <MyOrders /> : <Navigate to="/signin" />}
       />
       <Route
         path="/track-order/:orderId"
-        element={userData ? <TrackOrderPage /> : <Navigate to={"/signin"} />}
+        element={userData ? <TrackOrderPage /> : <Navigate to="/signin" />}
       />
       <Route
         path="/shop/:shopId"
-        element={userData ? <Shop /> : <Navigate to={"/signin"} />}
+        element={userData ? <Shop /> : <Navigate to="/signin" />}
       />
     </Routes>
   );
