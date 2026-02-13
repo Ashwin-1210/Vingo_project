@@ -15,8 +15,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL,
   },
 });
 
@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
 export const sendOtpMail = async (email, otp) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Vingo Support" <${process.env.EMAIL_USER}>`,
+      from: `"Vingo Support" <${process.env.EMAIL}>`,
       to: email,
       subject: "Your OTP Code - Vingo",
       html: `
@@ -48,7 +48,7 @@ export const sendOtpMail = async (email, otp) => {
 export const sendDeliveryOtpMail = async (user, otp) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Vingo Delivery" <${process.env.EMAIL_USER}>`,
+      from: `"Vingo Delivery" <${process.env.EMAIL}>`,
       to: user.email,
       subject: "Delivery OTP - Vingo",
       html: `
