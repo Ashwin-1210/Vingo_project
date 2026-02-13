@@ -3,11 +3,13 @@ import bcrypt from "bcryptjs";
 import genToken from "../utils/token.js";
 import { sendOtpMail } from "../utils/mail.js";
 
-// 🔥 universal cookie options (LOCAL + PRODUCTION safe)
+// 🔥 ENV-based cookie (FINAL FIX)
+const isProd = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
@@ -49,7 +51,7 @@ export const signUp = async (req, res) => {
     user.isOtpVerified = false;
     await user.save();
 
-    // 🔥 mail background me (signup hang nahi hoga)
+    // mail background me (signup block nahi karega)
     sendOtpMail(email, otp).catch(console.error);
 
     const token = await genToken(user._id);
