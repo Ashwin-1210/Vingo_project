@@ -18,20 +18,20 @@ import { socketHandler } from "./socket.js";
 const app = express();
 const server = http.createServer(app);
 
+// 🌐 Frontend URL from env (important for Render)
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
+// 🔌 Socket.io setup
 const io = new Server(server, {
   cors: {
     origin: FRONTEND_URL,
     credentials: true,
-    methods: ["GET", "POST"],
   },
 });
 
 app.set("io", io);
 
-const port = process.env.PORT || 5000;
-
+// 📦 Middleware
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -42,15 +42,25 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// 🛣️ Routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/shop", shopRouter);
 app.use("/api/item", itemRouter);
 app.use("/api/order", orderRouter);
 
+// 🔌 Socket handler
 socketHandler(io);
 
-server.listen(port, () => {
-  connectDb();
-  console.log(`Server started at ${port}`);
-});
+// 🚀 Start server AFTER DB connection
+const port = process.env.PORT || 5000;
+
+connectDb()
+  .then(() => {
+    server.listen(port, () => {
+      console.log(`✅ Server started at port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ Database connection failed:", err);
+  });
