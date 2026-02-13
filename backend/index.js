@@ -18,13 +18,16 @@ import { socketHandler } from "./socket.js";
 const app = express();
 const server = http.createServer(app);
 
-// 🌐 Frontend URL from env (important for Render)
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+// 🌐 Allow BOTH local + production frontend
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL, // https://vingo-project.vercel.app
+];
 
 // 🔌 Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -34,7 +37,7 @@ app.set("io", io);
 // 📦 Middleware
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
